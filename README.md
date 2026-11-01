@@ -109,8 +109,24 @@ See [commands.md](commands.md) and [results.md](results.md) for commands and obs
 
 See [commands.md](commands.md) and [results.md](results.md) for commands and measurements.
 
+## Phase 7 - Reusable Transfer Script and Sync Safety (Completed)
+- Created an executable Bash script, transfer.sh, supporting copy and sync operations.
+- Added argument validation, Rclone dependency checks, progress reporting, logging, and exit-code handling.
+- Configured sync to use dry-run by default; --execute explicitly enables real synchronization.
+- Verified an 80 MiB copy containing four files.
+- Confirmed that an invalid source returns exit code 3.
+- Demonstrated that dry-run preserves destination-only files and real sync removes them.
+- Verified 0 differences and 4 matching files after synchronization.
+- Validated required S3 environment variables without blocking local-to-local transfers.
+- Demonstrated config-free MinIO access using explicit S3 flags and --config /dev/null.
+- Tested incorrect endpoint port 9999 and restored the working endpoint on port 9000.
+
+See [commands.md](commands.md) and [results.md](results.md) for commands and observations.
+
 ## Upcoming Work
-- Phase 7: Reusable Bash transfer script, sync safety, config-free flag-based access, and final documentation.
+- Complete reproducible setup instructions, including portable sample-file generation.
+- Test the repository from a fresh clone and verify all documented steps.
+- Finalize documentation and commit the completed exercise.
 
 ## Security
 Local sample data, credentials, environment files, and Rclone configuration files are excluded from Git using .gitignore. Real credentials must never be committed.

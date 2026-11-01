@@ -136,3 +136,16 @@ Config-free Rclone can connect to S3-compatible storage through runtime environm
 
 ### Key learning
 Rclone skips unchanged objects, supports configurable concurrency and bandwidth limits, and can recover from interrupted uploads by retransferring data. A successful restart does not necessarily mean an interrupted multipart upload was resumed.
+
+## Phase 7 - Reusable Transfer Script Results
+
+- Copy: 4 files, 80 MiB, completed in 0.8 seconds.
+- Invalid source: exit code 3 propagated correctly.
+- Dry-run sync: planned deletion of a 37-byte destination-only file; file remained present.
+- Real sync --execute: deleted the extra 37-byte file.
+- Integrity verification: 0 differences, 4 matching files.
+- Missing S3 variables: helpful error and exit code 2.
+- Local-to-local transfer without S3 variables: 4 files, 80 MiB, successful.
+- Explicit S3 flags with --config /dev/null: listed testpress-source and testpress-backup.
+- Incorrect endpoint port 9999: connection refused; port 9000 restored successfully.
+- Remaining: fresh-clone reproducibility test and portable sample generation.

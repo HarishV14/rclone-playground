@@ -185,3 +185,34 @@ rclone copy samples/concurrency-test :s3:testpress-source/concurrency-test-4 --c
 rclone copy samples/concurrency-test :s3:testpress-source/concurrency-test-unlimited --config /dev/null --transfers 4 --progress --stats 1s
 rclone check samples/concurrency-test :s3:testpress-source/concurrency-test-unlimited --config /dev/null
 ```
+
+## Phase 7 - Reusable Transfer Script and Sync Safety
+
+### Environment setup
+Load .env and export RCLONE_S3_PROVIDER, RCLONE_S3_ACCESS_KEY_ID, RCLONE_S3_SECRET_ACCESS_KEY, RCLONE_S3_ENDPOINT and RCLONE_S3_REGION as shown in Phase 5.
+
+### Script commands
+```bash
+chmod +x transfer.sh
+./transfer.sh copy samples/concurrency-test :s3:testpress-backup/script-test
+./transfer.sh copy samples/does-not-exist :s3:testpress-backup/error-test
+printf "This file should survive the dry run\n" | rclone rcat :s3:testpress-backup/script-test/keep-test.txt --config /dev/null
+./transfer.sh sync samples/concurrency-test :s3:testpress-backup/script-test
+rclone ls :s3:testpress-backup/script-test/keep-test.txt --config /dev/null
+./transfer.sh sync samples/concurrency-test :s3:testpress-backup/script-test --execute
+rclone check samples/concurrency-test :s3:testpress-backup/script-test --config /dev/null
+```
+
+### Missing credentials and local copy
+```bash
+env -u RCLONE_S3_PROVIDER -u RCLONE_S3_ACCESS_KEY_ID -u RCLONE_S3_SECRET_ACCESS_KEY -u RCLONE_S3_ENDPOINT -u RCLONE_S3_REGION ./transfer.sh copy samples/concurrency-test :s3:testpress-backup/script-test
+env -u RCLONE_S3_PROVIDER -u RCLONE_S3_ACCESS_KEY_ID -u RCLONE_S3_SECRET_ACCESS_KEY -u RCLONE_S3_ENDPOINT -u RCLONE_S3_REGION ./transfer.sh copy samples/concurrency-test samples/local-script-test
+```
+
+### Explicit S3 flags and endpoint switching
+```bash
+env -u RCLONE_S3_PROVIDER -u RCLONE_S3_ACCESS_KEY_ID -u RCLONE_S3_SECRET_ACCESS_KEY -u RCLONE_S3_ENDPOINT -u RCLONE_S3_REGION rclone lsd :s3: --config /dev/null --s3-provider Minio --s3-access-key-id "$MINIO_ROOT_USER" --s3-secret-access-key "$MINIO_ROOT_PASSWORD" --s3-endpoint http://127.0.0.1:9000 --s3-region us-east-1
+rclone lsd :s3: --config /dev/null --s3-provider Minio --s3-access-key-id "$MINIO_ROOT_USER" --s3-secret-access-key "$MINIO_ROOT_PASSWORD" --s3-endpoint http://127.0.0.1:9999 --s3-region us-east-1 --retries 1 --low-level-retries 1
+```
+
+Warning: sync --execute deletes destination-only files. Avoid exposing credentials in process listings.
