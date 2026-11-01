@@ -16,10 +16,83 @@ rclone-playground/
 ├── commands.md          # Commands and examples
 ├── results.md           # Experiment observations
 ├── docker-compose.yml   # MinIO setup
-├── transfer.sh          # Reusable transfer script (upcoming)
+├── transfer.sh          # Reusable transfer script
 ├── .env.example         # Example MinIO environment variables
 └── .gitignore           # Excluded local files and credentials
 ```
+
+## Quick Start
+
+### Prerequisites
+- Git, Docker Compose, Rclone, Python 3 and Bash.
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/HarishV14/rclone-playground.git
+cd rclone-playground
+```
+
+### 2. Configure MinIO
+```bash
+cp .env.example .env
+```
+Replace the placeholder password with a strong password. Never commit `.env`.
+
+### 3. Start MinIO
+```bash
+docker compose up -d
+docker compose ps
+curl -i http://localhost:9000/minio/health/ready
+```
+
+### 4. Configure Rclone
+```bash
+set -a; source .env; set +a
+export RCLONE_S3_PROVIDER=Minio RCLONE_S3_ACCESS_KEY_ID="$MINIO_ROOT_USER" RCLONE_S3_SECRET_ACCESS_KEY="$MINIO_ROOT_PASSWORD" RCLONE_S3_ENDPOINT=http://127.0.0.1:9000 RCLONE_S3_REGION=us-east-1
+```
+
+### 5. Create S3 buckets
+```bash
+rclone mkdir :s3:testpress-source --config /dev/null
+rclone mkdir :s3:testpress-backup --config /dev/null
+```
+
+### 6. Generate sample files
+```bash
+python3 -c "from pathlib import Path; p=Path(samples/source/documents); p.mkdir(parents=True, exist_ok=True); [(p / ffile-{i}.bin).write_bytes(bytes([i]) * 1048576) for i in range(1,5)]"
+```
+
+### 7. Run the transfer script
+```bash
+./transfer.sh copy samples/source/documents :s3:testpress-source/quickstart
+```
+
+### 8. Verify integrity
+```bash
+rclone check samples/source/documents :s3:testpress-source/quickstart --config /dev/null
+```
+
+### 9. Synchronize safely
+```bash
+./transfer.sh sync samples/source/documents :s3:testpress-backup/quickstart
+```
+The default is dry-run. To perform actual synchronization:
+```bash
+./transfer.sh sync samples/source/documents :s3:testpress-backup/quickstart --execute
+```
+Warning: Real sync can delete destination-only files.
+
+### 10. Stop MinIO
+```bash
+docker compose down
+```
+The named volume preserves data. Do not use `docker compose down -v` unless you intend to delete it.
+
+### Detailed Documentation
+- [commands.md](commands.md) - Commands and exercises.
+- [results.md](results.md) - Experiment results.
+
+---
 
 ## Phase 1 - Fundamentals
 Understood local file storage, S3 object storage, and the purpose of Rclone.
@@ -122,11 +195,6 @@ See [commands.md](commands.md) and [results.md](results.md) for commands and mea
 - Tested incorrect endpoint port 9999 and restored the working endpoint on port 9000.
 
 See [commands.md](commands.md) and [results.md](results.md) for commands and observations.
-
-## Upcoming Work
-- Complete reproducible setup instructions, including portable sample-file generation.
-- Test the repository from a fresh clone and verify all documented steps.
-- Finalize documentation and commit the completed exercise.
 
 ## Security
 Local sample data, credentials, environment files, and Rclone configuration files are excluded from Git using .gitignore. Real credentials must never be committed.
