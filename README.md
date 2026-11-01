@@ -214,12 +214,6 @@ All mandatory Rclone exercise requirements were completed and verified.
 - Reusable `transfer.sh` with copy/sync, logging, validation and exit-code propagation.
 - Fresh-clone and fresh-volume reproducibility tests.
 
-### Reproducible MinIO startup
-`docker-compose.yml` includes a `minio-init` service which fixes ownership of a new Docker volume before MinIO starts. A completely fresh volume was tested successfully:
-- `minio-init`: Exited (0)
-- MinIO: running
-- readiness check: healthy
-
 ### Bonus work completed
 - Transfer between two separate MinIO S3 endpoints (`9000` -> `9100`).
 - Compared same-endpoint server-side copying with cross-endpoint client-mediated transfer.
