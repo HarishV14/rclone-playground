@@ -80,3 +80,29 @@ Docker images define the application environment, containers run the application
 
 ### Reproducibility
 The Alpine MinIO image was successfully downloaded on ARM64. The pinned image digest still requires verification on other architectures, such as AMD64.
+
+## Phase 5 - S3 Operations and Config-Free Access Results
+
+### Configuration
+- Used MinIO at http://127.0.0.1:9000 with credentials supplied through environment variables.
+- Used the direct :s3: backend with --config /dev/null, without relying on rclone.conf.
+- Created testpress-source and testpress-backup buckets.
+
+### Upload and download
+- Uploaded four objects totaling 100 MiB to testpress-source in approximately 1.3 seconds.
+- Verified the upload: 0 differences found; 4 matching files.
+- Downloaded four objects totaling 100 MiB to samples/s3-download in approximately 0.8 seconds.
+- Verified the downloaded files against the original source: 0 differences found; 4 matching files.
+
+### Server-side copy
+- Copied four objects (100 MiB) from testpress-source to testpress-backup in approximately 0.5 seconds.
+- Rclone reported: Server Side Copies: 4 @ 100.000 MiB.
+- Verified both buckets: 0 differences found; 4 matching files.
+
+### Object deletion
+- Uploaded a temporary delete-test.txt object using rclone rcat.
+- Deleted only that object using rclone deletefile.
+- Final bucket comparison: 0 differences found; 4 matching files.
+
+### Key learning
+Config-free Rclone can connect to S3-compatible storage through runtime environment variables. Server-side copying lets the storage service copy objects internally without transferring the object contents through the local machine.

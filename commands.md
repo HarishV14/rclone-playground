@@ -80,3 +80,53 @@ Expected response: HTTP/1.1 200 OK.
 ```bash
 docker compose logs --tail=40 minio
 ```
+
+## S3 operations with MinIO (config-free)
+
+Load MinIO credentials from the local environment file:
+
+```bash
+set -a; source .env; set +a
+```
+
+Export Rclone S3 settings for the current shell:
+
+```bash
+export RCLONE_S3_PROVIDER=Minio RCLONE_S3_ACCESS_KEY_ID="$MINIO_ROOT_USER" RCLONE_S3_SECRET_ACCESS_KEY="$MINIO_ROOT_PASSWORD" RCLONE_S3_ENDPOINT=http://127.0.0.1:9000 RCLONE_S3_REGION=us-east-1
+```
+
+All commands below use the direct :s3: backend and bypass rclone.conf with --config /dev/null.
+
+### Create and list buckets
+
+```bash
+rclone mkdir :s3:testpress-source --config /dev/null
+rclone mkdir :s3:testpress-backup --config /dev/null
+rclone lsd :s3: --config /dev/null
+```
+
+### Upload, verify, and download
+
+```bash
+rclone copy samples/source :s3:testpress-source --config /dev/null --progress
+rclone check samples/source :s3:testpress-source --config /dev/null
+rclone copy :s3:testpress-source samples/s3-download --config /dev/null --progress
+rclone check samples/source samples/s3-download
+```
+
+### Bucket-to-bucket server-side copy
+
+```bash
+rclone copy :s3:testpress-source :s3:testpress-backup --config /dev/null --progress
+rclone check :s3:testpress-source :s3:testpress-backup --config /dev/null
+```
+
+### Delete a temporary S3 object and verify
+
+```bash
+printf "Temporary S3 deletion test\\n" | rclone rcat :s3:testpress-backup/delete-test.txt --config /dev/null
+rclone deletefile :s3:testpress-backup/delete-test.txt --config /dev/null
+rclone check :s3:testpress-source :s3:testpress-backup --config /dev/null
+```
+
+Never commit .env or credentials. For production, use scoped credentials, a secrets manager, and HTTPS.

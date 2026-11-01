@@ -87,11 +87,21 @@ Use the credentials configured in `.env` to sign in to the console.
 ### Reproducibility Note
 The image was downloaded and tested on ARM64. AMD64 compatibility with the pinned digest has not yet been verified.
 
+## Phase 5 - S3 Operations and Config-Free Access (Completed)
+- Connected Rclone to local MinIO using environment variables and the :s3: backend.
+- Disabled persistent Rclone configuration using --config /dev/null.
+- Created testpress-source and testpress-backup buckets.
+- Uploaded four objects totaling 100 MiB and verified their integrity.
+- Downloaded the objects and verified the restored files.
+- Copied objects between S3 buckets using server-side copying.
+- Created and deleted a temporary S3 object without affecting the backup.
+- Confirmed 0 differences and 4 matching objects after deletion.
+
+See [commands.md](commands.md) and [results.md](results.md) for commands and observations.
+
 ## Upcoming Work
-- Phase 5: S3 bucket operations and transfers.
-- Phase 6: Config-free S3 access using flags and environment variables.
-- Phase 7: Large transfers, retries, interruption recovery, and performance tuning.
-- Phase 8: Reusable Bash transfer script and final documentation.
+- Phase 6: Large transfers, retries, interruption recovery, performance tuning, and config-free flag-based access.
+- Phase 7: Reusable Bash transfer script, sync safety, and final documentation.
 
 ## Security
 Local sample data, credentials, environment files, and Rclone configuration files are excluded from Git using .gitignore. Real credentials must never be committed.
