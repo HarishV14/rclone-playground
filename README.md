@@ -15,8 +15,9 @@ rclone-playground/
 ├── README.md            # Project overview
 ├── commands.md          # Commands and examples
 ├── results.md           # Experiment observations
-├── docker-compose.yml   # MinIO setup (upcoming)
+├── docker-compose.yml   # MinIO setup
 ├── transfer.sh          # Reusable transfer script (upcoming)
+├── .env.example         # Example MinIO environment variables
 └── .gitignore           # Excluded local files and credentials
 ```
 
@@ -37,16 +38,6 @@ Installed and verified Git, Docker, Docker Compose, and Rclone. Initialized and 
 - Deleted temporary files using rclone delete.
 
 See [commands.md](commands.md) and [results.md](results.md) for commands and observations.
-
-## Upcoming Work
-- Phase 4: Run MinIO with Docker Compose.
-- Phase 5: S3 bucket operations and transfers.
-- Phase 6: Config-free S3 access using flags and environment variables.
-- Phase 7: Large transfers, retries, interruption recovery, and performance tuning.
-- Phase 8: Reusable Bash transfer script and final documentation.
-
-## Security
-Local sample data, credentials, environment files, and Rclone configuration files are excluded from Git using .gitignore. Real credentials must never be committed.
 
 ## Phase 4 - Local S3 Storage with MinIO
 
@@ -93,14 +84,14 @@ Use the credentials configured in `.env` to sign in to the console.
 - `.env` is excluded from Git; `.env.example` contains placeholder credentials only.
 - The Docker image is pinned by SHA-256 digest for version consistency.
 
-### Troubleshooting
-If MinIO fails to start, inspect its logs:
-
-```bash
-docker compose logs --tail=40 minio
-```
-
-When migrating an existing volume from a root-based MinIO image, file ownership may need correction. See `commands.md` for the migration procedure. Fresh installations should not require this step.
-
 ### Reproducibility Note
 The image was downloaded and tested on ARM64. AMD64 compatibility with the pinned digest has not yet been verified.
+
+## Upcoming Work
+- Phase 5: S3 bucket operations and transfers.
+- Phase 6: Config-free S3 access using flags and environment variables.
+- Phase 7: Large transfers, retries, interruption recovery, and performance tuning.
+- Phase 8: Reusable Bash transfer script and final documentation.
+
+## Security
+Local sample data, credentials, environment files, and Rclone configuration files are excluded from Git using .gitignore. Real credentials must never be committed.

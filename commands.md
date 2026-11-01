@@ -57,7 +57,7 @@ rclone delete samples/delete-test --progress
 ls -la samples/delete-test
 ```
 
-## Phase 4 - MinIO with Docker Compose
+## MinIO with Docker Compose
 
 ### Start MinIO
 
@@ -80,16 +80,3 @@ Expected response: HTTP/1.1 200 OK.
 ```bash
 docker compose logs --tail=40 minio
 ```
-
-### Troubleshooting: existing volume ownership
-
-When migrating from a root-based MinIO image to the Alpine MinIO image, the existing volume may be owned by root. The Alpine image runs as the minio user.
-
-For this specific migration, we repaired ownership using:
-
-```bash
-docker run --rm --user 0 -v rclone-playground_minio-data:/data --entrypoint sh alpine/minio:latest-release -c 'chown -R minio:minio /data'
-docker compose restart minio
-```
-
-This migration command is not required for a fresh installation.
