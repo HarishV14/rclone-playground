@@ -99,9 +99,18 @@ The image was downloaded and tested on ARM64. AMD64 compatibility with the pinne
 
 See [commands.md](commands.md) and [results.md](results.md) for commands and observations.
 
+## Phase 6 - Large Transfers and Reliability (Completed)
+- Uploaded a 1 GiB file with bandwidth limits, concurrency settings, progress reporting, and retry configuration.
+- Verified that repeating an unchanged upload transfers 0 B.
+- Interrupted an upload at 13% and restarted it successfully.
+- Verified recovered file integrity using matching MD5 checksums.
+- Compared sequential and concurrent uploads under a shared bandwidth limit.
+- Tested unlimited-bandwidth uploads and verified all transferred files.
+
+See [commands.md](commands.md) and [results.md](results.md) for commands and measurements.
+
 ## Upcoming Work
-- Phase 6: Large transfers, retries, interruption recovery, performance tuning, and config-free flag-based access.
-- Phase 7: Reusable Bash transfer script, sync safety, and final documentation.
+- Phase 7: Reusable Bash transfer script, sync safety, config-free flag-based access, and final documentation.
 
 ## Security
 Local sample data, credentials, environment files, and Rclone configuration files are excluded from Git using .gitignore. Real credentials must never be committed.

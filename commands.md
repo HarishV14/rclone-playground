@@ -130,3 +130,58 @@ rclone check :s3:testpress-source :s3:testpress-backup --config /dev/null
 ```
 
 Never commit .env or credentials. For production, use scoped credentials, a secrets manager, and HTTPS.
+
+## Large-file transfers and reliability
+
+These commands assume the RCLONE_S3_* environment variables are exported as described above.
+
+### Create a 1 GiB test file
+
+```bash
+mkfile 1g samples/source/videos/large-test.bin
+ls -lh samples/source/videos/large-test.bin
+```
+
+### Upload with bandwidth and retry settings
+
+```bash
+rclone copyto samples/source/videos/large-test.bin :s3:testpress-source/videos/large-test.bin --config /dev/null --transfers 2 --checkers 4 --bwlimit 10M --progress --stats 5s --retries 3 --low-level-retries 5
+```
+
+Repeat the command to test skipping unchanged files.
+
+### Interrupted upload and restart
+
+```bash
+rclone copyto samples/source/videos/large-test.bin :s3:testpress-source/videos/interrupted-test.bin --config /dev/null --bwlimit 5M --progress --stats 5s --retries 3
+```
+
+Interrupt with Ctrl+C at approximately 10-20%, then inspect the destination:
+
+```bash
+rclone ls :s3:testpress-source/videos/interrupted-test.bin --config /dev/null
+```
+
+Restart the upload:
+
+```bash
+rclone copyto samples/source/videos/large-test.bin :s3:testpress-source/videos/interrupted-test.bin --config /dev/null --bwlimit 10M --progress --stats 5s --retries 3
+```
+
+Compare the file checksums:
+
+```bash
+rclone md5sum samples/source/videos/large-test.bin
+rclone md5sum :s3:testpress-source/videos/interrupted-test.bin --config /dev/null
+```
+
+### Concurrency and bandwidth comparison
+
+```bash
+mkdir -p samples/concurrency-test
+for i in 1 2 3 4; do mkfile 20m "samples/concurrency-test/file-$i.bin"; done
+rclone copy samples/concurrency-test :s3:testpress-source/concurrency-test-1 --config /dev/null --transfers 1 --bwlimit 5M --progress --stats 5s
+rclone copy samples/concurrency-test :s3:testpress-source/concurrency-test-4 --config /dev/null --transfers 4 --bwlimit 5M --progress --stats 5s
+rclone copy samples/concurrency-test :s3:testpress-source/concurrency-test-unlimited --config /dev/null --transfers 4 --progress --stats 1s
+rclone check samples/concurrency-test :s3:testpress-source/concurrency-test-unlimited --config /dev/null
+```

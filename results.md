@@ -106,3 +106,33 @@ The Alpine MinIO image was successfully downloaded on ARM64. The pinned image di
 
 ### Key learning
 Config-free Rclone can connect to S3-compatible storage through runtime environment variables. Server-side copying lets the storage service copy objects internally without transferring the object contents through the local machine.
+
+## Phase 6 - Large Transfers and Reliability Results
+
+### Large-file upload
+- Created a 1 GiB file using mkfile.
+- Uploaded 1 GiB with --bwlimit 10M in 1m 45.9s at approximately 9.992 MiB/s.
+- Repeated the upload: 0 B transferred in 0.0s.
+- Configured --transfers 2, --checkers 4, --retries 3, and --low-level-retries 5; no retryable failure was intentionally induced.
+
+### Interrupted upload and recovery
+- Interrupted the 1 GiB upload at 13% (135.531 MiB) using Ctrl+C.
+- The incomplete object was not visible in a normal S3 object listing.
+- Restarted the upload, transferring the full 1 GiB in 1m 45.4s.
+- Original and recovered objects had matching MD5 hashes: cd573cfaace07e7949bc0c46028904ff.
+- Recovery was a full retransmission, not a demonstrated partial resume.
+
+### Concurrency comparison
+| Test | Data | Elapsed time |
+|---|---|---|
+| --transfers 1, --bwlimit 5M | 80 MiB | 15.9s |
+| --transfers 4, --bwlimit 5M | 80 MiB | 15.9s |
+| --transfers 4, no bandwidth limit | 80 MiB | 0.7s |
+
+- The shared bandwidth limit was the bottleneck in both limited tests.
+- Removing the bandwidth limit greatly improved throughput on local MinIO.
+- These results do not isolate the performance benefit of concurrency without bandwidth limits.
+- Final integrity check: 0 differences found; 4 matching files.
+
+### Key learning
+Rclone skips unchanged objects, supports configurable concurrency and bandwidth limits, and can recover from interrupted uploads by retransferring data. A successful restart does not necessarily mean an interrupted multipart upload was resumed.
