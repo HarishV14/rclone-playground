@@ -1,0 +1,5 @@
+.env
+rclone.conf
+*.log
+samples/
+storage/
