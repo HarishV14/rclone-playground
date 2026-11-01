@@ -216,3 +216,31 @@ rclone lsd :s3: --config /dev/null --s3-provider Minio --s3-access-key-id "$MINI
 ```
 
 Warning: sync --execute deletes destination-only files. Avoid exposing credentials in process listings.
+
+## Fresh-Clone Reproducibility Test
+
+Clone into a separate directory and enter it:
+
+```bash
+git clone https://github.com/HarishV14/rclone-playground.git rclone-fresh-test
+cd rclone-fresh-test
+```
+
+Create .env from .env.example and replace the placeholder credentials with credentials for your MinIO server. For the test against an existing local MinIO server, the same credentials must be used.
+
+Generate four portable 1 MiB sample files using Python 3:
+
+```bash
+python3 -c 'from pathlib import Path; p=Path("samples/concurrency-test"); p.mkdir(parents=True, exist_ok=True); [(p / f"file-{i}.bin").write_bytes(bytes([i]) * (1024 * 1024)) for i in range(1, 5)]; print("Created 4 sample files (1 MiB each)")'
+```
+
+Load the local MinIO credentials and configure Rclone:
+
+```bash
+set -a; source .env; set +a
+export RCLONE_S3_PROVIDER=Minio RCLONE_S3_ACCESS_KEY_ID="$MINIO_ROOT_USER" RCLONE_S3_SECRET_ACCESS_KEY="$MINIO_ROOT_PASSWORD" RCLONE_S3_ENDPOINT=http://127.0.0.1:9000 RCLONE_S3_REGION=us-east-1
+./transfer.sh copy samples/concurrency-test :s3:testpress-backup/fresh-clone-test
+rclone check samples/concurrency-test :s3:testpress-backup/fresh-clone-test --config /dev/null
+```
+
+Prerequisites: Git, Bash, Python 3, Rclone, Docker with Compose, and a running MinIO server. Create the destination bucket if it does not exist. This test reused an existing MinIO server; independent MinIO startup remains unverified.

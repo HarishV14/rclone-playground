@@ -149,3 +149,13 @@ Rclone skips unchanged objects, supports configurable concurrency and bandwidth 
 - Explicit S3 flags with --config /dev/null: listed testpress-source and testpress-backup.
 - Incorrect endpoint port 9999: connection refused; port 9000 restored successfully.
 - Remaining: fresh-clone reproducibility test and portable sample generation.
+
+## Fresh-Clone Reproducibility Results
+
+- Cloned GitHub repository successfully into rclone-fresh-test.
+- Verified transfer.sh retained executable permissions.
+- Created local .env and confirmed Git ignores it.
+- Generated four 1 MiB files using Python 3 (4 MiB total).
+- Uploaded all four files to testpress-backup/fresh-clone-test successfully.
+- Rclone check reported 0 differences and 4 matching files.
+- The fresh clone was tested against the existing MinIO server, not an independently started instance.
