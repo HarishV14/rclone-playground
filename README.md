@@ -47,3 +47,60 @@ See [commands.md](commands.md) and [results.md](results.md) for commands and obs
 
 ## Security
 Local sample data, credentials, environment files, and Rclone configuration files are excluded from Git using .gitignore. Real credentials must never be committed.
+
+## Phase 4 - Local S3 Storage with MinIO
+
+This project runs an S3-compatible object storage server locally using Docker Compose. No paid cloud account is required.
+
+### Prerequisites
+- Docker and Docker Compose
+- Rclone
+
+### Setup
+
+1. Clone this repository and enter the project directory.
+2. Create your local environment file:
+
+```bash
+cp .env.example .env
+```
+
+3. Replace the example password in `.env` with a strong password. Never commit `.env`.
+4. Start MinIO:
+
+```bash
+docker compose up -d
+```
+
+5. Verify the service:
+
+```bash
+docker compose ps
+curl -i http://localhost:9000/minio/health/ready
+```
+
+A healthy MinIO server returns HTTP/1.1 200 OK.
+
+### Local Endpoints
+- S3 API: http://localhost:9000
+- Web console: http://localhost:9001
+
+Use the credentials configured in `.env` to sign in to the console.
+
+### Storage and Security
+- MinIO data persists in the Docker-managed `minio-data` volume.
+- Both ports are bound to 127.0.0.1, limiting access to the local machine.
+- `.env` is excluded from Git; `.env.example` contains placeholder credentials only.
+- The Docker image is pinned by SHA-256 digest for version consistency.
+
+### Troubleshooting
+If MinIO fails to start, inspect its logs:
+
+```bash
+docker compose logs --tail=40 minio
+```
+
+When migrating an existing volume from a root-based MinIO image, file ownership may need correction. See `commands.md` for the migration procedure. Fresh installations should not require this step.
+
+### Reproducibility Note
+The image was downloaded and tested on ARM64. AMD64 compatibility with the pinned digest has not yet been verified.

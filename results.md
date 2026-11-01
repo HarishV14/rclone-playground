@@ -54,3 +54,29 @@ Conclusion: rclone sync makes the destination match the source and may delete de
 
 ## Next Phase
 Set up locally hosted S3-compatible storage using MinIO and Docker Compose.
+
+## Phase 4 - MinIO Docker Compose Results
+
+### Objective
+Run a local S3-compatible MinIO server using Docker Compose without using a paid cloud service.
+
+### Results
+- Docker Compose configuration validation passed.
+- Initial MinIO image downloads from Docker Hub and Quay.io failed due to registry access or unavailable image references.
+- Successfully downloaded the Alpine Community MinIO image: alpine/minio:latest-release.
+- Pinned the image in docker-compose.yml using its SHA-256 digest.
+- Created the rclone-minio container and the persistent rclone-playground_minio-data volume.
+- The Alpine MinIO container initially failed because the existing volume directories were owned by root.
+- Resolved the permission issue by changing volume ownership to the minio user.
+- Restarted MinIO successfully.
+- Verified the MinIO readiness endpoint returned HTTP/1.1 200 OK.
+
+### Endpoints
+- S3 API: http://localhost:9000
+- MinIO Console: http://localhost:9001
+
+### Key Learning
+Docker images define the application environment, containers run the application, and named volumes preserve data across container recreation. File permissions still apply inside containers.
+
+### Reproducibility
+The Alpine MinIO image was successfully downloaded on ARM64. The pinned image digest still requires verification on other architectures, such as AMD64.
