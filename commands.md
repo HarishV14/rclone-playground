@@ -244,3 +244,99 @@ rclone check samples/concurrency-test :s3:testpress-backup/fresh-clone-test --co
 ```
 
 Prerequisites: Git, Bash, Python 3, Rclone, Docker with Compose, and a running MinIO server. Create the destination bucket if it does not exist. This test reused an existing MinIO server; independent MinIO startup remains unverified.
+
+## Final Mandatory and Bonus Experiments
+
+### PDF requirement
+```bash
+mkdir -p samples/source/documents
+printf "Rclone PDF transfer test\nTestpress DevOps exercise\n" > /tmp/rclone-pdf.txt
+cupsfilter -m application/pdf /tmp/rclone-pdf.txt > samples/source/documents/sample.pdf
+file samples/source/documents/sample.pdf
+rclone copyto samples/source/documents/sample.pdf :s3:testpress-source/documents/sample.pdf --config /dev/null --progress
+rclone check samples/source/documents :s3:testpress-source/documents --config /dev/null
+```
+
+### Explicit S3 object listing
+```bash
+rclone ls :s3:testpress-source --config /dev/null
+```
+
+### Invalid credential test
+```bash
+RCLONE_S3_PROVIDER=Minio RCLONE_S3_ACCESS_KEY_ID="wrong-user" RCLONE_S3_SECRET_ACCESS_KEY="wrong-password" RCLONE_S3_ENDPOINT=http://127.0.0.1:9000 RCLONE_S3_REGION=us-east-1 rclone lsd :s3: --config /dev/null --retries 1 --low-level-retries 1
+```
+
+### Fresh-volume MinIO validation
+```bash
+docker compose down -v
+docker compose up -d
+curl -i http://localhost:9000/minio/health/ready
+docker compose ps -a
+```
+
+The Compose setup uses `minio-init` to set `/data` ownership before the non-root MinIO service starts.
+
+### Two S3 endpoints
+Primary MinIO uses port `9000`; a second MinIO instance was started on `9100`.
+
+Temporary remotes were supplied entirely through `RCLONE_CONFIG_FIRST_*` and `RCLONE_CONFIG_SECOND_*` environment variables, then copied with:
+```bash
+rclone copy first:testpress-source/bonus-test second:testpress-target/bonus-test --config /dev/null --progress
+rclone check first:testpress-source/bonus-test second:testpress-target/bonus-test --config /dev/null
+```
+
+### Checker performance
+```bash
+time rclone copy samples/bonus-test :s3:testpress-source/bonus-test --config /dev/null --checkers 1 --transfers 1
+time rclone copy samples/bonus-test :s3:testpress-source/bonus-test --config /dev/null --checkers 8 --transfers 1
+```
+
+### Multi-thread stream comparison
+```bash
+mkfile 512m samples/bonus-test/large-multithread.bin
+rclone copyto samples/bonus-test/large-multithread.bin :s3:testpress-source/large-mt-1.bin --config /dev/null --multi-thread-streams 1 --progress
+rclone copyto samples/bonus-test/large-multithread.bin :s3:testpress-source/large-mt-4.bin --config /dev/null --multi-thread-streams 4 --progress
+```
+
+### Multipart upload investigation
+```bash
+rclone copyto samples/bonus-test/large-multithread.bin :s3:testpress-source/multipart-test.bin --config /dev/null --bwlimit 5M --progress
+# Interrupt with Ctrl+C
+rclone backend list-multipart-uploads :s3:testpress-source --config /dev/null
+rclone backend cleanup :s3:testpress-source --config /dev/null
+rclone backend list-multipart-uploads :s3:testpress-source --config /dev/null
+```
+
+`--s3-leave-parts-on-error` can be used when intentionally investigating leftover multipart parts.
+
+### Crypt backend
+```bash
+export RCLONE_CONFIG_CRYPT_TYPE=crypt
+export RCLONE_CONFIG_CRYPT_REMOTE=:s3:testpress-source/crypt-data
+export RCLONE_CONFIG_CRYPT_PASSWORD="$(rclone obscure testpass123)"
+export RCLONE_CONFIG_CRYPT_PASSWORD2="$(rclone obscure salt123)"
+echo "Encrypted Rclone test" > samples/crypt-test.txt
+rclone copyto samples/crypt-test.txt crypt:secret.txt --config /dev/null
+rclone ls crypt: --config /dev/null
+rclone ls :s3:testpress-source/crypt-data --config /dev/null
+```
+
+### Scheduled transfer example
+```bash
+cat cron-example.txt
+```
+
+The example runs the transfer every hour and redirects stdout/stderr to `scheduled.log`.
+
+### Python subprocess
+```bash
+python3 run_rclone.py
+rclone check samples/bonus-test :s3:testpress-backup/python-test --config /dev/null
+```
+
+### Mount investigation
+```bash
+rclone mount --help | head
+```
+`rclone mount` requires a FUSE implementation on macOS. macFUSE was not installed, so this optional bonus was investigated but intentionally skipped.

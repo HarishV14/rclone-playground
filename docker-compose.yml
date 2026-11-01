@@ -1,8 +1,19 @@
 services:
+  minio-init:
+    image: alpine/minio@sha256:cf23643a6cf9ce159c57643ceb88279e431262282428c9e0bf3a7ef1a97e84b4
+    user: "0"
+    entrypoint: ["sh", "-c"]
+    command: ["chown -R minio:minio /data"]
+    volumes:
+      - minio-data:/data
+
   minio:
     image: alpine/minio@sha256:cf23643a6cf9ce159c57643ceb88279e431262282428c9e0bf3a7ef1a97e84b4
     container_name: rclone-minio
     command: server /data --console-address ":9001"
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
     ports:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:9001:9001"

@@ -1,0 +1,1 @@
+0 * * * * cd /Users/harishv/workspace/rclone-playground && ./transfer.sh copy samples/bonus-test :s3:testpress-backup/scheduled >> scheduled.log 2>&1

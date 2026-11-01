@@ -159,3 +159,68 @@ Rclone skips unchanged objects, supports configurable concurrency and bandwidth 
 - Uploaded all four files to testpress-backup/fresh-clone-test successfully.
 - Rclone check reported 0 differences and 4 matching files.
 - The fresh clone was tested against the existing MinIO server, not an independently started instance.
+
+## Final Mandatory and Bonus Results
+
+### Mandatory completion
+- Real PDF created: PDF 1.3, 1 page, approximately 12 KiB.
+- PDF uploaded successfully and document directory check reported 0 differences and 3 matching files.
+- S3 objects were explicitly listed from `testpress-source`.
+- Invalid credentials returned HTTP 403 `InvalidAccessKeyId`.
+- Fresh Docker volume startup succeeded after adding the `minio-init` ownership initialization service.
+- All mandatory exercise requirements are complete.
+
+### Two S3 endpoints
+- Source endpoint: `127.0.0.1:9000`.
+- Destination endpoint: `127.0.0.1:9100`.
+- Transferred 4 files / 40 MiB in approximately 0.8s.
+- No `Server Side Copies` line appeared for the cross-endpoint operation.
+- Verification: 0 differences, 4 matching files.
+- This contrasts with same-endpoint bucket copying where Rclone reported server-side copies.
+
+### Checker comparison
+| Configuration | Total time |
+|---|---:|
+| `--checkers 1 --transfers 1` | 0.383s |
+| `--checkers 8 --transfers 1` | 0.366s |
+
+The difference was minimal because the dataset contained only a few files and MinIO was local.
+
+### Multi-thread stream comparison
+| Configuration | 512 MiB elapsed time |
+|---|---:|
+| `--multi-thread-streams 1` | 8.4s |
+| `--multi-thread-streams 4` | 7.2s |
+
+Four streams were faster in this local experiment.
+
+### Multipart behavior
+- Interrupted a 512 MiB upload at about 13%.
+- Default interruption left no pending multipart uploads.
+- `rclone backend list-multipart-uploads` returned an empty list after cleanup.
+- `rclone backend cleanup` successfully removed incomplete multipart state.
+- A complete upload using `--s3-leave-parts-on-error` reached 100%, so no leftover parts were expected from that successful run.
+
+### Crypt backend
+- Plain crypt view: `secret.txt` (22 bytes).
+- Raw S3 object name: `gkkgco6roe6slqeof73ahjv6ko` (70 bytes).
+- Confirmed that the crypt backend exposes the decrypted logical filename while the underlying S3 object is encrypted/obfuscated.
+
+### Scheduling
+- Created `cron-example.txt`.
+- Schedule: minute 0 of every hour.
+- The example changes into the project directory, runs `transfer.sh`, and appends stdout/stderr to `scheduled.log`.
+- The cron entry was documented but not installed into the users real crontab.
+
+### Python subprocess
+- Python successfully invoked the reusable transfer workflow using `subprocess.run`.
+- Final verification reported 0 differences and 5 matching files in `testpress-backup/python-test`.
+
+### Mount investigation
+- Rclone mount capability is available in the installed Rclone build.
+- Actual mounting failed because macFUSE/FUSE was not installed.
+- Mount was an optional bonus and was intentionally left at the investigation stage.
+
+### Final status
+Mandatory exercise: complete.
+Bonus challenges: all targeted bonus experiments completed except actual `rclone mount`, which requires the external macFUSE dependency.

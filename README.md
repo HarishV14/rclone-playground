@@ -198,3 +198,36 @@ See [commands.md](commands.md) and [results.md](results.md) for commands and obs
 
 ## Security
 Local sample data, credentials, environment files, and Rclone configuration files are excluded from Git using .gitignore. Real credentials must never be committed.
+
+## Final Exercise Status
+All mandatory Rclone exercise requirements were completed and verified.
+
+### Mandatory coverage
+- Local listing, copy, move, sync, delete and integrity checks.
+- Nested text, PDF and 100+ MiB sample files.
+- Local MinIO S3-compatible storage using Docker Compose.
+- Bucket creation, upload, download, object listing, bucket-to-bucket copy and object deletion.
+- Config-free S3 using `:s3:`, environment variables, explicit CLI flags and `--config /dev/null`.
+- Valid and invalid credential tests and endpoint switching.
+- 1 GiB transfer, bandwidth limiting, concurrency, progress, retries and interrupted-transfer recovery.
+- Safe synchronization using `--dry-run` before real deletion.
+- Reusable `transfer.sh` with copy/sync, logging, validation and exit-code propagation.
+- Fresh-clone and fresh-volume reproducibility tests.
+
+### Reproducible MinIO startup
+`docker-compose.yml` includes a `minio-init` service which fixes ownership of a new Docker volume before MinIO starts. A completely fresh volume was tested successfully:
+- `minio-init`: Exited (0)
+- MinIO: running
+- readiness check: healthy
+
+### Bonus work completed
+- Transfer between two separate MinIO S3 endpoints (`9000` -> `9100`).
+- Compared same-endpoint server-side copying with cross-endpoint client-mediated transfer.
+- Tested `--transfers`, `--checkers` and `--multi-thread-streams`.
+- Investigated interrupted S3 multipart uploads and cleanup.
+- Tested the `crypt` backend and confirmed encrypted/obfuscated underlying object names.
+- Created a cron scheduling example.
+- Invoked the reusable transfer workflow from Python using `subprocess`.
+- `rclone mount` was investigated but not executed successfully because macFUSE was not installed on the test Mac.
+
+Detailed commands are in [commands.md](commands.md). Actual observations and timings are in [results.md](results.md).
